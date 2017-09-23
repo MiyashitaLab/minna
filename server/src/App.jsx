@@ -1,7 +1,11 @@
 import React, { PureComponent } from 'react';
 import autobind from 'autobind';
 import Dropzone from 'react-dropzone';
+import io from 'socket.io-client';
+import Slider from './Slider';
 import { dropzone } from './App.scss';
+
+const socket = io('http://localhost:8000');
 
 export default class App extends PureComponent {
 	constructor() {
@@ -10,8 +14,16 @@ export default class App extends PureComponent {
 		this.state = {
 			/** @type {File} */
 			file: null,
-			overlay: false
+			overlay: false,
+			volume: 0
 		};
+
+		socket.on('hello', this.onHello);
+	}
+
+	@autobind
+	onHello({ volume }) {
+		this.setState({ volume });
 	}
 
 	@autobind
@@ -48,8 +60,17 @@ export default class App extends PureComponent {
 		}
 	}
 
+	/**
+	 * @param {number} volume
+	 */
+	@autobind
+	onChangeVolumeSlider(volume) {
+		socket.emit('from:volume', { volume });
+		this.setState({ volume });
+	}
+
 	render() {
-		const { state: { file, overlay } } = this;
+		const { state: { file, overlay, volume } } = this;
 
 		return (
 			<div styleName='base'>
@@ -62,6 +83,9 @@ export default class App extends PureComponent {
 				<div styleName='overlay' style={{ display: overlay ? 'flex' : 'none' }}>
 					<p>送信中だよ</p>
 				</div>
+				<h2>Volume</h2>
+				<p>{volume.toFixed(2)}</p>
+				<Slider width={300} height={20} onChange={this.onChangeVolumeSlider} value={volume} background='rgb(158, 158, 158)' fill='rgb(33, 150, 243)' />
 			</div>
 		);
 	}

@@ -4,8 +4,11 @@ const libpath = require('path');
 const fs = require('fs');
 const cors = require('cors');
 
-const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets') });
 const app = express();
+const io = require('socket.io')(app.listen(8000));
+const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets') });
+
+let volume = 0.5;
 
 app.use(cors());
 app.use('/', express.static(libpath.join(__dirname, 'dst/')));
@@ -24,4 +27,10 @@ app.post('/upload', upload.single('music'), (req, res) => {
 	});
 });
 
-app.listen(8000);
+io.on('connection', (client) => {
+	client.emit('hello', { volume });
+	client.on('from:volume', ({ volume: next }) => {
+		volume = next;
+		io.emit('to:volume', { volume });
+	});
+});
