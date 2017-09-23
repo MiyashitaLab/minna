@@ -73,6 +73,7 @@ export default class App extends PureComponent {
 
 			if (index < files.length - 1) {
 				this.index += 1;
+				socket.emit('client/update:index', { index: this.index });
 				this.setState({ src: files[this.index] });
 			} else {
 				this.wait = true;
