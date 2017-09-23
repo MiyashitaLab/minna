@@ -18,7 +18,7 @@ export default class App extends PureComponent {
 			volume: 0
 		};
 
-		socket.on('hello', this.onHello);
+		socket.on('server/hello', this.onHello);
 	}
 
 	@autobind
@@ -65,7 +65,7 @@ export default class App extends PureComponent {
 	 */
 	@autobind
 	onChangeVolumeSlider(volume) {
-		socket.emit('from:volume', { volume });
+		socket.emit('client/update:volume', { volume });
 		this.setState({ volume });
 	}
 

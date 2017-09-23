@@ -1,22 +1,9 @@
 import React, { PureComponent } from 'react';
 import { findDOMNode } from 'react-dom';
-import fs from 'fs';
-import libpath from 'path';
 import autobind from 'autobind';
 import io from 'socket.io-client';
 
 const socket = io('http://localhost:8000');
-const DIR = libpath.join(__dirname, 'assets');
-
-const readdir = () => new Promise((resolve, reject) => {
-	fs.readdir(DIR, (err, files) => {
-		if (err) {
-			reject(err);
-		} else {
-			resolve(files.map((a) => libpath.join(DIR, a)));
-		}
-	});
-});
 
 export default class App extends PureComponent {
 	constructor() {
@@ -26,50 +13,55 @@ export default class App extends PureComponent {
 
 		/** @type {HTMLAudioElement} */
 		this.$e = null;
+		/** @type {string[]} */
 		this.files = [];
-		this.index = 0;
+		this.index = -1;
+		this.wait = true;
 
-		socket.on('hello', this.onHello);
-		socket.on('to:volume', this.onVolumeFromServer);
+		socket.on('server/hello', this.onHello);
+		socket.on('server/update:volume', this.onVolume);
+		socket.on('server/update:files', this.onFiles);
 	}
 
 	componentDidMount() {
 		this.$e = findDOMNode(this);
-
-		this.loop();
 	}
 
 	componentDidUpdate() {
 		const { $e } = this;
 
+		this.wait = false;
 		$e.play();
 	}
 
 	@autobind
-	onHello({ volume }) {
+	onHello({ volume, index, files }) {
+		const { $e } = this;
+
+		$e.volume = volume;
+		this.index = index;
+		this.files = files;
+	}
+
+	@autobind
+	onVolume({ volume }) {
 		const { $e } = this;
 
 		$e.volume = volume;
 	}
 
 	@autobind
-	onVolumeFromServer({ volume }) {
-		const { $e } = this;
+	onFiles({ files }) {
+		const { wait } = this;
 
-		$e.volume = volume;
-	}
+		this.files = files;
 
-	/**
-	 * @param {Object} state
-	 * @param {Function} callback
-	 */
-	setStateAsync(state, callback = () => { }) {
-		return new Promise((resolve) => {
-			this.setState(state, () => {
-				callback();
-				resolve();
-			});
-		});
+		if (wait) {
+			this.wait = false;
+			this.index += 1;
+			socket.emit('client/update:index', { index: this.index });
+			this.setState({ src: this.files[this.index] });
+		}
 	}
 
 	@autobind
@@ -77,22 +69,15 @@ export default class App extends PureComponent {
 		const { $e: { currentTime, duration } } = this;
 
 		if (currentTime === duration) {
-			this.index += 1;
-		}
-	}
+			const { files, index } = this;
 
-	@autobind
-	loop() {
-		(async () => {
-			const { index } = this;
-			const files = await readdir();
-
-			this.files = files;
-
-			if (index < files.length) {
-				await this.setStateAsync({ src: files[index] });
+			if (index < files.length - 1) {
+				this.index += 1;
+				this.setState({ src: files[this.index] });
+			} else {
+				this.wait = true;
 			}
-		})().catch(console.error).then(() => requestAnimationFrame(this.loop));
+		}
 	}
 
 	render() {
