@@ -8,6 +8,7 @@ const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets'
 const app = express();
 
 app.use(cors());
+app.use('/', express.static(libpath.join(__dirname, 'dst/')));
 
 app.post('/upload', upload.single('music'), (req, res) => {
 	const { file: { path, originalname } } = req;
