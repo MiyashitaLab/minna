@@ -3,6 +3,7 @@ import autobind from 'autobind';
 import Dropzone from 'react-dropzone';
 import io from 'socket.io-client';
 import Slider from './Slider';
+import libpath from 'path';
 import { dropzone } from './App.scss';
 
 const socket = io('http://localhost:8000');
@@ -15,15 +16,29 @@ export default class App extends PureComponent {
 			/** @type {File} */
 			file: null,
 			overlay: false,
-			volume: 0
+			volume: 0,
+			index: -1,
+			files: []
 		};
 
 		socket.on('server/hello', this.onHello);
+		socket.on('server/update:files', this.onFiles);
+		socket.on('server/update:index', this.onIndex);
 	}
 
 	@autobind
-	onHello({ volume }) {
-		this.setState({ volume });
+	onHello({ volume, index, files }) {
+		this.setState({ volume, index, files });
+	}
+
+	@autobind
+	onFiles({ files }) {
+		this.setState({ files });
+	}
+
+	@autobind
+	onIndex({ index }) {
+		this.setState({ index });
 	}
 
 	@autobind
@@ -39,6 +54,7 @@ export default class App extends PureComponent {
 			this.setState({ overlay: true }, () => {
 				const body = new FormData();
 				body.append('music', file);
+				body.append('skip', document.querySelector('[type="checkbox"]').checked);
 
 				fetch('http://localhost:8000/upload', {
 					method: 'POST',
@@ -70,7 +86,7 @@ export default class App extends PureComponent {
 	}
 
 	render() {
-		const { state: { file, overlay, volume } } = this;
+		const { state: { file, overlay, volume, files, index } } = this;
 
 		return (
 			<div styleName='base'>
@@ -79,13 +95,38 @@ export default class App extends PureComponent {
 				<Dropzone onDrop={this.onDrop} multiple={false} className={dropzone}>
 					<p>ここで曲を選択するよ</p>
 				</Dropzone>
+				<p>
+					<input type='checkbox' />
+					割り込むよ
+				</p>
 				<button onClick={this.onClick}>送信するよ</button>
+				<div styleName='flex'>
+					<div>
+						<h2>Volume</h2>
+						<p>{volume.toFixed(2)}</p>
+						<Slider width={300} height={20} onChange={this.onChangeVolumeSlider} value={volume} background='rgb(158, 158, 158)' fill='rgb(33, 150, 243)' />
+					</div>
+					<div>
+						<h2>Setlist</h2>
+						<div styleName='setlist'>
+							{files.map((a, i) => {
+								a = libpath.basename(a);
+								a = a.slice(0, -libpath.extname(a).length);
+								a = a.substring(0, a.lastIndexOf('.'));
+
+								return (
+									<div data-active={i === index} key={i}>
+										<div>{i}</div>
+										<div>{a}</div>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				</div>
 				<div styleName='overlay' style={{ display: overlay ? 'flex' : 'none' }}>
 					<p>送信中だよ</p>
 				</div>
-				<h2>Volume</h2>
-				<p>{volume.toFixed(2)}</p>
-				<Slider width={300} height={20} onChange={this.onChangeVolumeSlider} value={volume} background='rgb(158, 158, 158)' fill='rgb(33, 150, 243)' />
 			</div>
 		);
 	}

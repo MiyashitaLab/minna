@@ -25,7 +25,8 @@ export default class Slider extends PureComponent {
 	}
 
 	draw() {
-		const { $canvas: { width, height }, ctx, props: { value, fill } } = this;
+		const { $canvas, ctx, props: { value, fill } } = this;
+		const { width, height } = $canvas.getBoundingClientRect();
 
 		ctx.fillStyle = fill;
 		ctx.clearRect(0, 0, width, height);

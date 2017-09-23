@@ -3,22 +3,26 @@ const multer = require('multer');
 const libpath = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
 const io = require('socket.io')(app.listen(8000));
 const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets') });
 
-const files = [];
+let files = [];
 let volume = 0.5;
 let index = -1;
 
 app.use(cors());
 app.use('/', express.static(libpath.join(__dirname, 'dst/')));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.post('/upload', upload.single('music'), (req, res) => {
-	const { file: { path, originalname } } = req;
+	const { file: { path, originalname }, body: { skip } } = req;
 	const ext = libpath.extname(originalname);
-	const nextPath = libpath.join(libpath.dirname(path), `m${Date.now()}${ext}`);
+	const name = originalname.slice(0, -ext.length);
+	const nextPath = libpath.join(libpath.dirname(path), `${name}.${Date.now()}${ext}`);
 
 	fs.rename(path, nextPath, (err) => {
 		if (err) {
@@ -26,7 +30,12 @@ app.post('/upload', upload.single('music'), (req, res) => {
 			res.sendStatus(500);
 		}
 
-		files.push(nextPath);
+		if (skip === 'true') {
+			files = files.slice(0, index + 1).concat(nextPath, files.slice(index + 1));
+		} else {
+			files.push(nextPath);
+		}
+
 		io.emit('server/update:files', { files });
 		res.sendStatus(200);
 	});
@@ -40,5 +49,6 @@ io.on('connection', (client) => {
 	});
 	client.on('client/update:index', ({ index: next }) => {
 		index = next;
+		io.emit('server/update:index', { index });
 	});
 });

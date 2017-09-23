@@ -5,6 +5,10 @@
 	margin-left: auto;
 	margin-right: auto;
 	user-select: none;
+
+	input[type='checkbox'] {
+		font: inherit;
+	}
 }
 
 .dropzone {
@@ -43,4 +47,38 @@ button {
 	align-items: center;
 	justify-content: center;
 	color: white;
+}
+
+.flex {
+	display: flex;
+
+	> div {
+		margin-right: 20px;
+	}
+
+	> div:nth-of-type(1) {
+		width: 300px;
+	}
+
+	> div:nth-of-type(2) {
+		width: 600px;
+	}
+}
+
+.setlist {
+	> div {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+		display: flex;
+		padding: 5px 10px;
+
+		&[data-active='true'] {
+			font-weight: 600;
+		}
+
+		> div:nth-of-type(1) {
+			border-right: 1px solid rgba(0, 0, 0, 0.4);
+			padding-right: 10px;
+			margin-right: 5px;
+		}
+	}
 }
