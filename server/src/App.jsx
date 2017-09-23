@@ -26,6 +26,7 @@ export default class App extends PureComponent {
 		socket.on('server/hello', this.onHello);
 		socket.on('server/update:files', this.onFiles);
 		socket.on('server/update:index', this.onIndex);
+		socket.on('server/update:volume', this.onVolume);
 	}
 
 	@autobind
@@ -41,6 +42,11 @@ export default class App extends PureComponent {
 	@autobind
 	onIndex({ index }) {
 		this.setState({ index });
+	}
+
+	@autobind
+	onVolume({ volume }) {
+		this.setState({ volume });
 	}
 
 	@autobind
