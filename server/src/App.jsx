@@ -6,7 +6,9 @@ import Slider from './Slider';
 import libpath from 'path';
 import { dropzone } from './App.scss';
 
-const socket = io('http://localhost:8000');
+const { protocol, hostname } = location;
+const target = `${protocol}//${hostname}:8000`;
+const socket = io(target);
 
 export default class App extends PureComponent {
 	constructor() {
@@ -56,7 +58,7 @@ export default class App extends PureComponent {
 				body.append('music', file);
 				body.append('skip', document.querySelector('[type="checkbox"]').checked);
 
-				fetch('http://localhost:8000/upload', {
+				fetch(`${target}/upload`, {
 					method: 'POST',
 					body
 				}).then(({ status }) => {
