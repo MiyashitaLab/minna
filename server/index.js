@@ -3,7 +3,7 @@ const multer = require('multer');
 const libpath = require('path');
 const fs = require('fs');
 
-const upload = multer({ dest: libpath.join(__dirname, '../app/dst/assets') });
+const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets') });
 const app = express();
 
 app.post('/upload', upload.single('music'), (req, res) => {
