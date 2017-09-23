@@ -12,6 +12,8 @@ const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets'
 let files = [];
 let volume = 0.5;
 let index = -1;
+let nice = 0;
+let bad = 0;
 
 app.use(cors());
 app.use('/', express.static(libpath.join(__dirname, 'dst/')));
@@ -42,7 +44,7 @@ app.post('/upload', upload.single('music'), (req, res) => {
 });
 
 io.on('connection', (client) => {
-	client.emit('server/hello', { volume, files, index });
+	client.emit('server/hello', { volume, files, index, nice, bad });
 	client.on('client/update:volume', ({ volume: next }) => {
 		volume = next;
 		io.emit('server/update:volume', { volume });
@@ -50,5 +52,18 @@ io.on('connection', (client) => {
 	client.on('client/update:index', ({ index: next }) => {
 		index = next;
 		io.emit('server/update:index', { index });
+	});
+	client.on('client/update:nice', ({ nice: next }) => {
+		nice = next;
+		io.emit('server/update:nice', { nice });
+	});
+	client.on('client/update:bad', ({ bad: next }) => {
+		bad = next;
+		io.emit('server/update:bad', { bad });
+	});
+	client.on('client/reset:voted', () => {
+		nice = 0;
+		bad = 0;
+		io.emit('server/reset:voted');
 	});
 });

@@ -21,6 +21,7 @@ export default class App extends PureComponent {
 		socket.on('server/hello', this.onHello);
 		socket.on('server/update:volume', this.onVolume);
 		socket.on('server/update:files', this.onFiles);
+		socket.on('server/update:bad', this.onBad);
 	}
 
 	componentDidMount() {
@@ -65,12 +66,33 @@ export default class App extends PureComponent {
 	}
 
 	@autobind
+	onBad({ bad }) {
+		if (bad === 5) {
+			const { files, index } = this;
+
+			socket.emit('client/reset:voted');
+			if (index < files.length - 1) {
+				this.index += 1;
+				socket.emit('client/update:index', { index: this.index });
+				this.setState({ src: files[this.index] });
+			} else {
+				const { $e } = this;
+
+				$e.currentTime = 0;
+				$e.pause();
+				this.wait = true;
+			}
+		}
+	}
+
+	@autobind
 	onPause() {
 		const { $e: { currentTime, duration } } = this;
 
 		if (currentTime === duration) {
 			const { files, index } = this;
 
+			socket.emit('client/reset:voted');
 			if (index < files.length - 1) {
 				this.index += 1;
 				socket.emit('client/update:index', { index: this.index });

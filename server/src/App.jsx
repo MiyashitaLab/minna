@@ -4,6 +4,8 @@ import Dropzone from 'react-dropzone';
 import io from 'socket.io-client';
 import Slider from './Slider';
 import libpath from 'path';
+import Nice from 'react-icons/lib/fa/heart';
+import Bad from 'react-icons/lib/fa/close';
 import { dropzone } from './App.scss';
 
 const { protocol, hostname } = location;
@@ -20,18 +22,23 @@ export default class App extends PureComponent {
 			overlay: false,
 			volume: 0,
 			index: -1,
-			files: []
+			files: [],
+			bad: 0,
+			nice: 0
 		};
 
 		socket.on('server/hello', this.onHello);
 		socket.on('server/update:files', this.onFiles);
 		socket.on('server/update:index', this.onIndex);
 		socket.on('server/update:volume', this.onVolume);
+		socket.on('server/update:nice', this.onNice);
+		socket.on('server/update:bad', this.onBad);
+		socket.on('server/reset:voted', this.onResetVoted);
 	}
 
 	@autobind
-	onHello({ volume, index, files }) {
-		this.setState({ volume, index, files });
+	onHello({ volume, index, files, bad, nice }) {
+		this.setState({ volume, index, files, bad, nice });
 	}
 
 	@autobind
@@ -52,6 +59,21 @@ export default class App extends PureComponent {
 	@autobind
 	onDrop(files) {
 		this.setState({ file: files[0] });
+	}
+
+	@autobind
+	onNice({ nice }) {
+		this.setState({ nice });
+	}
+
+	@autobind
+	onBad({ bad }) {
+		this.setState({ bad });
+	}
+
+	@autobind
+	onResetVoted() {
+		this.setState({ nice: 0, bad: 0 });
 	}
 
 	@autobind
@@ -93,8 +115,26 @@ export default class App extends PureComponent {
 		this.setState({ volume });
 	}
 
+	@autobind
+	onClickNice() {
+		let { state: { nice } } = this;
+
+		nice += 1;
+		socket.emit('client/update:nice', { nice });
+		this.setState({ nice });
+	}
+
+	@autobind
+	onClickBad() {
+		let { state: { bad } } = this;
+
+		bad += 1;
+		socket.emit('client/update:bad', { bad });
+		this.setState({ bad });
+	}
+
 	render() {
-		const { state: { file, overlay, volume, files, index } } = this;
+		const { state: { file, overlay, volume, files, index, bad, nice } } = this;
 
 		return (
 			<div styleName='base'>
@@ -113,6 +153,14 @@ export default class App extends PureComponent {
 						<h2>Volume</h2>
 						<p>{volume.toFixed(2)}</p>
 						<Slider width={300} height={20} onChange={this.onChangeVolumeSlider} value={volume} background='rgb(158, 158, 158)' fill='rgb(33, 150, 243)' />
+						<h2>Vote</h2>
+						<p styleName='voted'>
+							<span styleName='voted-nice-n'>{nice}</span>
+							/
+							<span styleName='voted-bad-n'>{bad}</span>
+						</p>
+						<button styleName='nice' onClick={this.onClickNice}><Nice />いいね</button>
+						<button styleName='bad' onClick={this.onClickBad}><Bad />よくないね</button>
 					</div>
 					<div>
 						<h2>Setlist</h2>
