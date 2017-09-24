@@ -4,16 +4,18 @@ const libpath = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const State = require('./state');
 
 const app = express();
 const io = require('socket.io')(app.listen(8000));
 const upload = multer({ dest: libpath.join(__dirname, '../client/app/dst/assets') });
-
-let files = [];
-let volume = 0.5;
-let index = -1;
-let nice = 0;
-let bad = 0;
+const state = new State(io, {
+	files: [],
+	volume: 0.5,
+	index: -1,
+	nice: 0,
+	bad: 0
+});
 
 app.use(cors());
 app.use('/', express.static(libpath.join(__dirname, 'dst/')));
@@ -25,6 +27,7 @@ app.post('/upload', upload.single('music'), (req, res) => {
 	const ext = libpath.extname(originalname);
 	const name = originalname.slice(0, -ext.length);
 	const nextPath = libpath.join(libpath.dirname(path), `${name}.${Date.now()}${ext}`);
+	let files = state.get('files');
 
 	fs.rename(path, nextPath, (err) => {
 		if (err) {
@@ -33,37 +36,25 @@ app.post('/upload', upload.single('music'), (req, res) => {
 		}
 
 		if (skip === 'true') {
+			const index = state.get('index');
 			files = files.slice(0, index + 1).concat(nextPath, files.slice(index + 1));
 		} else {
 			files.push(nextPath);
 		}
 
-		io.emit('server/update:files', { files });
+		state.merge({ files });
 		res.sendStatus(200);
 	});
 });
 
 io.on('connection', (client) => {
-	client.emit('server/hello', { volume, files, index, nice, bad });
-	client.on('client/update:volume', ({ volume: next }) => {
-		volume = next;
-		io.emit('server/update:volume', { volume });
-	});
-	client.on('client/update:index', ({ index: next }) => {
-		index = next;
-		io.emit('server/update:index', { index });
-	});
-	client.on('client/update:nice', ({ nice: next }) => {
-		nice = next;
-		io.emit('server/update:nice', { nice });
-	});
-	client.on('client/update:bad', ({ bad: next }) => {
-		bad = next;
-		io.emit('server/update:bad', { bad });
-	});
+	client.emit('server/hello', state.all());
+	client.on('client/update:volume', ({ volume }) => state.merge({ volume }));
+	client.on('client/update:index', ({ index }) => state.merge({ index }));
+	client.on('client/update:nice', ({ nice }) => state.merge({ nice }));
+	client.on('client/update:bad', ({ bad }) => state.merge({ bad }));
 	client.on('client/reset:voted', () => {
-		nice = 0;
-		bad = 0;
+		state.merge({ nice: 0, bad: 0 }, false);
 		io.emit('server/reset:voted');
 	});
 });
