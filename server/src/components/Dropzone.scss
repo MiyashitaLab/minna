@@ -1,0 +1,11 @@
+@import '../../shared/vars.scss';
+
+.base {
+	width: 100%;
+	padding: 20px;
+	cursor: pointer;
+	border: 3px dashed $black-l1;
+	color: $black-l1;
+	box-sizing: border-box;
+	margin-bottom: 20px;
+}

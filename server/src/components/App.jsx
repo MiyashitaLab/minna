@@ -1,12 +1,12 @@
 import React, { PureComponent } from 'react';
 import autobind from 'autobind';
-import Dropzone from 'react-dropzone';
 import io from 'socket.io-client';
-import Slider from './Slider';
-import libpath from 'path';
-import Nice from 'react-icons/lib/fa/heart';
-import Bad from 'react-icons/lib/fa/close';
-import { dropzone } from './App.scss';
+import Dropzone from './Dropzone';
+import Setlist from './Setlist';
+import Overlay from './Overlay';
+import Volume from './Volume';
+import Vote from './Vote';
+import './App.scss';
 
 const { protocol, hostname } = location;
 const target = `${protocol}//${hostname}:8000`;
@@ -140,49 +140,29 @@ export default class App extends PureComponent {
 			<div styleName='base'>
 				<h1>Minna: みんなの曲流せる君</h1>
 				<p>{file ? `選択された曲は"${file.name}"だよ` : '早く曲を選択してね'}</p>
-				<Dropzone onDrop={this.onDrop} multiple={false} className={dropzone}>
+				<Dropzone onDrop={this.onDrop}>
 					<p>ここで曲を選択するよ</p>
 				</Dropzone>
 				<p>
 					<input type='checkbox' />
 					割り込むよ
 				</p>
-				<button onClick={this.onClick}>送信するよ</button>
+				<button onClick={this.onClick} className='btn'>送信するよ</button>
 				<div styleName='flex'>
 					<div>
 						<h2>Volume</h2>
-						<p>{volume.toFixed(2)}</p>
-						<Slider width={300} height={20} onChange={this.onChangeVolumeSlider} value={volume} background='rgb(158, 158, 158)' fill='rgb(33, 150, 243)' />
+						<Volume onChange={this.onChangeVolumeSlider} value={volume} />
 						<h2>Vote</h2>
-						<p styleName='voted'>
-							<span styleName='voted-nice-n'>{nice}</span>
-							/
-							<span styleName='voted-bad-n'>{bad}</span>
-						</p>
-						<button styleName='nice' onClick={this.onClickNice}><Nice />いいね</button>
-						<button styleName='bad' onClick={this.onClickBad}><Bad />よくないね</button>
+						<Vote nice={nice} bad={bad} addNice={this.onClickNice} addBad={this.onClickBad} />
 					</div>
 					<div>
 						<h2>Setlist</h2>
-						<div styleName='setlist'>
-							{files.map((a, i) => {
-								a = libpath.basename(a);
-								a = a.slice(0, -libpath.extname(a).length);
-								a = a.substring(0, a.lastIndexOf('.'));
-
-								return (
-									<div data-active={i === index} key={i}>
-										<div>{i}</div>
-										<div>{a}</div>
-									</div>
-								);
-							})}
-						</div>
+						<Setlist filenames={files} active={index} />
 					</div>
 				</div>
-				<div styleName='overlay' style={{ display: overlay ? 'flex' : 'none' }}>
+				<Overlay visible={overlay}>
 					<p>送信中だよ</p>
-				</div>
+				</Overlay>
 			</div>
 		);
 	}

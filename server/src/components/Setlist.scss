@@ -1,0 +1,19 @@
+@import '../../shared/vars.scss';
+
+.base {
+	> div {
+		border-bottom: 1px solid $black-l1;
+		display: flex;
+		padding: 5px 10px;
+
+		&[data-active='true'] {
+			font-weight: 600;
+		}
+
+		> div:nth-of-type(1) {
+			border-right: 1px solid $black-l1;
+			padding-right: 10px;
+			margin-right: 5px;
+		}
+	}
+}

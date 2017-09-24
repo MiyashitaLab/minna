@@ -1,3 +1,5 @@
+@import '../shared/vars.scss';
+
 html,
 body,
 main {
@@ -7,4 +9,36 @@ main {
 
 body {
 	margin: 0;
+}
+
+:global .btn {
+	padding: 10px 5px;
+	border-radius: 4px;
+	border: none;
+	font: inherit;
+	cursor: pointer;
+	background-color: $black;
+	color: white;
+	outline: none;
+	margin-right: 10px;
+
+	&:hover {
+		opacity: 0.9;
+	}
+}
+
+:global .red-text {
+	color: $red;
+}
+
+:global .red {
+	background-color: $red;
+}
+
+:global .blue-text {
+	color: $blue;
+}
+
+:global .blue {
+	background-color: $blue;
 }
