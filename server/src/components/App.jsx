@@ -7,6 +7,7 @@ import Overlay from './Overlay';
 import Volume from './Volume';
 import Vote from './Vote';
 import './App.scss';
+import 'babel-polyfill';
 
 const { protocol, hostname } = location;
 const target = `${protocol}//${hostname}:8000`;

@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "autobind": "^1.0.3",
+    "babel-polyfill": "^6.26.0",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
     "express": "^4.15.4",
