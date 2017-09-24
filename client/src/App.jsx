@@ -70,7 +70,6 @@ export default class App extends PureComponent {
 		if (bad === 5) {
 			const { files, index } = this;
 
-			socket.emit('client/reset:voted');
 			if (index < files.length - 1) {
 				this.index += 1;
 				socket.emit('client/update:index', { index: this.index });
@@ -92,7 +91,6 @@ export default class App extends PureComponent {
 		if (currentTime === duration) {
 			const { files, index } = this;
 
-			socket.emit('client/reset:voted');
 			if (index < files.length - 1) {
 				this.index += 1;
 				socket.emit('client/update:index', { index: this.index });
@@ -103,9 +101,14 @@ export default class App extends PureComponent {
 		}
 	}
 
+	@autobind
+	onPlay() {
+		socket.emit('client/reset:voted');
+	}
+
 	render() {
 		const { state: { src } } = this;
 
-		return <audio src={src} controls onPause={this.onPause} />;
+		return <audio src={src} controls onPause={this.onPause} onPlay={this.onPlay} />;
 	}
 }
