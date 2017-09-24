@@ -52,7 +52,7 @@ module.exports = class State {
 	get(k) {
 		const { state } = this;
 
-		return state.get(k).toJS();
+		return this.toJS(state.get(k));
 	}
 
 	/**
