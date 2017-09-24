@@ -22,7 +22,7 @@ const plugins = [
 ];
 
 if (isProduction) {
-	presets.push('es2015');
+	presets.push('es2015', 'stage-3');
 	plugins.push(
 		new UglifyJsPlugin({ compress: { warnings: false }, mangle: true }),
 		new AggressiveMergingPlugin()

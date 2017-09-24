@@ -24,7 +24,10 @@ export default class App extends PureComponent {
 			index: -1,
 			files: [],
 			bad: 0,
-			nice: 0
+			nice: 0,
+			checkedYouTube: false,
+			youtubeLink: '',
+			checkedSkip: false
 		};
 
 		socket.on('server/hello', this.onHello);
@@ -78,32 +81,41 @@ export default class App extends PureComponent {
 
 	@autobind
 	onClick() {
-		const { state: { file } } = this;
+		const { state: { file, checkedSkip, checkedYouTube, youtubeLink } } = this;
 
-		if (file) {
-			this.setState({ overlay: true }, () => {
+		(async () => {
+			if (file) {
 				const body = new FormData();
 				body.append('music', file);
-				body.append('skip', document.querySelector('[type="checkbox"]').checked);
+				body.append('skip', checkedSkip);
 
-				fetch(`${target}/upload`, {
+				this.setState({ overlay: true });
+				return fetch(`${target}/upload`, {
 					method: 'POST',
 					body
-				}).then(({ status }) => {
-					if (status === 200) {
-						this.setState({ file: null, overlay: false });
-						alert('送信されたよ');
-					} else {
-						Promise.reject('サーバでエラー吐いてるわ');
-					}
-				}).catch((err) => {
-					console.error(err);
-					this.setState({ overlay: false });
 				});
-			});
-		} else {
+			} else if (checkedYouTube && youtubeLink) {
+				this.setState({ overlay: true });
+				return fetch(`${target}/link`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ skip: checkedSkip, link: youtubeLink })
+				});
+			}
+
 			alert('早く曲を選択してね');
-		}
+			return Promise.reject();
+		})().then(({ status }) => {
+			if (status === 200) {
+				alert('送信されたよ');
+			} else {
+				Promise.reject('サーバでエラー吐いてるわ');
+			}
+		}).catch(console.error).then(() => {
+			this.setState({ file: null, overlay: false, checkSkip: false, checkYouTube: false, youtubeLink: '' });
+		});
 	}
 
 	/**
@@ -133,8 +145,23 @@ export default class App extends PureComponent {
 		this.setState({ bad });
 	}
 
+	@autobind
+	onChangeCheckYouTube({ currentTarget: { checked } }) {
+		this.setState({ checkedYouTube: checked });
+	}
+
+	@autobind
+	onChangeCheckSkip({ currentTarget: { checked } }) {
+		this.setState({ checkedSkip: checked });
+	}
+
+	@autobind
+	onChangeYouTubeLink({ currentTarget: { value } }) {
+		this.setState({ youtubeLink: value });
+	}
+
 	render() {
-		const { state: { file, overlay, volume, files, index, bad, nice } } = this;
+		const { state: { file, overlay, volume, files, index, bad, nice, checkedSkip, checkedYouTube, youtubeLink } } = this;
 
 		return (
 			<div styleName='base'>
@@ -144,7 +171,12 @@ export default class App extends PureComponent {
 					<p>ここで曲を選択するよ</p>
 				</Dropzone>
 				<p>
-					<input type='checkbox' />
+					<input type='checkbox' checked={checkedYouTube} onChange={this.onChangeCheckYouTube} />
+					YouTubeのリンクをいれるよ
+					<input type='text' className='input' value={youtubeLink} onChange={this.onChangeYouTubeLink} />
+				</p>
+				<p>
+					<input type='checkbox' checked={checkedSkip} onChange={this.onChangeCheckSkip} />
 					割り込むよ
 				</p>
 				<button onClick={this.onClick} className='btn'>送信するよ</button>

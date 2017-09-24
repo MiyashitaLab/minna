@@ -27,6 +27,11 @@ body {
 	}
 }
 
+:global .input {
+	font: inherit;
+	color: inherit;
+}
+
 :global .red-text {
 	color: $red;
 }
