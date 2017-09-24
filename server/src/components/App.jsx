@@ -115,7 +115,7 @@ export default class App extends PureComponent {
 				Promise.reject('サーバでエラー吐いてるわ');
 			}
 		}).catch(console.error).then(() => {
-			this.setState({ file: null, overlay: false, checkSkip: false, checkYouTube: false, youtubeLink: '' });
+			this.setState({ file: null, overlay: false, checkedSkip: false, checkedYouTube: false, youtubeLink: '' });
 		});
 	}
 
