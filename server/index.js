@@ -60,7 +60,7 @@ app.post('/link', (req, res) => {
 				} else if (stderr) {
 					reject(err);
 				} else {
-					resolve(`${stdout.match(/\s+\[download\]\s+Destination:\s+(.+).webm\s+/)[1]}.mp3`);
+					resolve(`${stdout.match(/\s+\[download\]\s+Destination:\s+(.+)\.\w+\s+/)[1]}.mp3`);
 				}
 			});
 		});
