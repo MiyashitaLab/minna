@@ -69,7 +69,7 @@ app.post('/link', (req, res) => {
 
 		await fs.rename(libpath.join(__dirname, downloaded), nextPath);
 
-		if (skip === 'true') {
+		if (skip) {
 			const index = state.get('index');
 			files = files.slice(0, index + 1).concat(nextPath, files.slice(index + 1));
 		} else {
