@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const { exec } = require('child_process');
 const State = require('./state');
 
+const ENCORE_FOR_NICE = 50;
 const app = express();
 const io = require('socket.io')(app.listen(8000));
 const target = libpath.join(__dirname, '../client/app/dst/assets');
@@ -87,7 +88,18 @@ io.on('connection', (client) => {
 	client.emit('server/hello', state.all());
 	client.on('client/update:volume', ({ volume }) => state.merge({ volume }));
 	client.on('client/update:index', ({ index }) => state.merge({ index }));
-	client.on('client/update:nice', ({ nice }) => state.merge({ nice }));
+	client.on('client/update:nice', ({ nice }) => {
+		if (nice === ENCORE_FOR_NICE) {
+			const files = state.get('files');
+
+			if (files.length > 0) {
+				files.push(files[state.get('index')]);
+				state.merge({ files });
+			}
+		}
+
+		state.merge({ nice });
+	});
 	client.on('client/update:bad', ({ bad }) => state.merge({ bad }));
 	client.on('client/reset:voted', () => {
 		state.merge({ nice: 0, bad: 0 }, false);
